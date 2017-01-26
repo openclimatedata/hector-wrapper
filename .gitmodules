@@ -1,0 +1,3 @@
+[submodule "hector"]
+	path = hector
+	url = git@github.com:swillner/hector.git
