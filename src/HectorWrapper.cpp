@@ -52,6 +52,8 @@ HectorWrapper::HectorWrapper() : output_visitor(this) {
     hcore_.addVisitor(&output_visitor);
 }
 
+HectorWrapper::~HectorWrapper(){};
+
 void HectorWrapper::run() {
     hcore_.prepareToRun();
     hcore_.run();
@@ -94,5 +96,4 @@ void HectorWrapper::set(const std::string& section, const std::string& variable,
     }
     set(section, variable, &years[0], &values[0], years.size());
 }
-
 }

@@ -41,18 +41,19 @@ class OutputVisitor : public AVisitor {
 };
 
 class HectorWrapper {
-  private:
+  protected:
     Core hcore_;
     OutputVisitor output_visitor;
 
   public:
     HectorWrapper();
+    virtual ~HectorWrapper();
 
     inline OutputVisitor* output() { return &output_visitor; }
     inline const OutputVisitor* output() const { return &output_visitor; }
     inline Core* hcore() { return &hcore_; }
     inline const Core* hcore() const { return &hcore_; }
-    void run();
+    virtual void run();
     void set(const std::string& section, const std::string& variable, const std::string& value);
     void set(const std::string& section, const std::string& variable, const double value);
     void set(const std::string& section, const std::string& variable, const int year, const double value);
