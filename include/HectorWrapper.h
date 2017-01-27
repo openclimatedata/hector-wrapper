@@ -1,7 +1,7 @@
 #ifndef HECTOR_WRAPPER_H
 #define HECTOR_WRAPPER_H
 
-#include <exception>
+#include <stdexcept>
 #include <string>
 #include <vector>
 #include "components/imodel_component.hpp"
