@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2017 Sven Willner <sven.willner@pik-potsdam.de>
+ * Free software under GNU General Public License v3, see LICENSE
+ */
+
 #include "HectorWrapper.h"
 #include "components/component_data.hpp"
 #include "data/message_data.hpp"
