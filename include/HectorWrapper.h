@@ -26,19 +26,20 @@ class hector_wrapper_exception : public std::runtime_error {
 class OutputVisitor : public AVisitor {
   private:
     double start_date;
+    double current_date;
     double end_date;
-    int index;
     const HectorWrapper* wrapper_;
     struct OutputVariable {
         IModelComponent* component;
         std::string name;
         std::vector<double> values;
+        bool needs_date;
     };
     std::vector<OutputVariable> variables;
 
   public:
     OutputVisitor(const HectorWrapper* wrapper_p) : wrapper_(wrapper_p) {};
-    void add_variable(const std::string& component, const std::string& name);
+    void add_variable(const std::string& component, const std::string& name, const bool need_date = false);
     const std::vector<double>& get_variable(const std::string& component, const std::string& name) const;
     bool shouldVisit(const bool in_spinup, const double date);
     void visit(Core* core);

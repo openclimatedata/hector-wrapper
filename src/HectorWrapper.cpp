@@ -10,8 +10,7 @@
 #include "h_exception.hpp"
 
 namespace Hector {
-
-void OutputVisitor::add_variable(const std::string& component, const std::string& name) {
+void OutputVisitor::add_variable(const std::string& component, const std::string& name, const bool need_date) {
     start_date = wrapper_->hcore()->getStartDate();
     Hector::IModelComponent* component_;
     if (component == "core") {
@@ -19,7 +18,7 @@ void OutputVisitor::add_variable(const std::string& component, const std::string
     } else {
         component_ = wrapper_->hcore()->getComponentByName(component);
     }
-    OutputVariable variable = {component_, name, std::vector<double>(static_cast<int>(wrapper_->hcore()->getEndDate() - start_date + 1))};
+    OutputVariable variable = {component_, name, std::vector<double>(static_cast<int>(wrapper_->hcore()->getEndDate() - start_date + 1)), need_date};
     variables.emplace_back(variable);
 }
 
@@ -33,16 +32,21 @@ const std::vector<double>& OutputVisitor::get_variable(const std::string& compon
 }
 
 bool OutputVisitor::shouldVisit(const bool in_spinup, const double date) {
-    index = static_cast<int>(date - start_date - 1);
+    current_date = date;
     return !in_spinup;
 }
 
 void OutputVisitor::visit(Hector::Core* core) {
+    unsigned int index = static_cast<int>(current_date - start_date - 1);
     for (auto& variable : variables) {
+        Hector::message_data info;
+        if (variable.needs_date) {
+            info.date = current_date;
+        }
         if (variable.component) {
-            variable.values[index] = variable.component->sendMessage(M_GETDATA, variable.name);
+            variable.values[index] = variable.component->sendMessage(M_GETDATA, variable.name, info);
         } else {
-            variable.values[index] = core->sendMessage(M_GETDATA, variable.name);
+            variable.values[index] = core->sendMessage(M_GETDATA, variable.name, info);
         }
     }
 };
