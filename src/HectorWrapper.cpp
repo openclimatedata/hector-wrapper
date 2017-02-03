@@ -70,7 +70,7 @@ void HectorWrapper::run() {
 
 void HectorWrapper::set(const std::string& section, const std::string& variable, const std::string& value) {
     message_data data(value);
-    auto bracket_open = std::find(variable.begin(), variable.end(), '[');  // TODO handle unit
+    auto bracket_open = std::find(variable.begin(), variable.end(), '[');
     if (bracket_open != variable.end()) {
         data.date = std::stod(std::string(bracket_open + 1, std::find(bracket_open, variable.end(), ']')));
         hcore_.setData(section, std::string(variable.begin(), bracket_open), data);
@@ -104,5 +104,31 @@ void HectorWrapper::set(const std::string& section, const std::string& variable,
         throw hector_wrapper_exception("years and values should be of equal size");
     }
     set(section, variable, &years[0], &values[0], years.size());
+}
+
+void HectorWrapper::set(const std::string& section, const std::string& variable, const double value, const std::string& unit) {
+    message_data data(unitval(value, unitval::parseUnitsName(unit)));
+    hcore_.setData(section, variable, data);
+}
+
+void HectorWrapper::set(const std::string& section, const std::string& variable, const int year, const double value, const std::string& unit) {
+    message_data data(unitval(value, unitval::parseUnitsName(unit)));
+    data.date = year;
+    hcore_.setData(section, variable, data);
+}
+
+void HectorWrapper::set(const std::string& section, const std::string& variable, const int* years, const double* values, const size_t size, const std::string& unit) {
+    for (unsigned int i = 0; i < size; ++i) {
+        message_data data(unitval(values[i], unitval::parseUnitsName(unit)));
+        data.date = years[i];
+        hcore_.setData(section, variable, data);
+    }
+}
+
+void HectorWrapper::set(const std::string& section, const std::string& variable, const std::vector<int>& years, const std::vector<double>& values, const std::string& unit) {
+    if (years.size() != values.size()) {
+        throw hector_wrapper_exception("years and values should be of equal size");
+    }
+    set(section, variable, &years[0], &values[0], years.size(), unit);
 }
 }

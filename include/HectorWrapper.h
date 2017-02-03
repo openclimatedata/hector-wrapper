@@ -65,6 +65,10 @@ class HectorWrapper {
     void set(const std::string& section, const std::string& variable, const int year, const double value);
     void set(const std::string& section, const std::string& variable, const int* years, const double* values, const size_t size);
     void set(const std::string& section, const std::string& variable, const std::vector<int>& years, const std::vector<double>& values);
+    void set(const std::string& section, const std::string& variable, const double value, const std::string& unit);
+    void set(const std::string& section, const std::string& variable, const int year, const double value, const std::string& unit);
+    void set(const std::string& section, const std::string& variable, const int* years, const double* values, const size_t size, const std::string& unit);
+    void set(const std::string& section, const std::string& variable, const std::vector<int>& years, const std::vector<double>& values, const std::string& unit);
 };
 }
 
