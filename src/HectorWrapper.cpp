@@ -10,7 +10,7 @@
 #include "h_exception.hpp"
 
 namespace Hector {
-void OutputVisitor::add_variable(const std::string& component, const std::string& name, const bool need_date) {
+void OutputVisitor::add_variable(const std::string& component, const std::string& name, const bool need_date, const bool in_spinup) {
     start_date = wrapper_->hcore()->getStartDate();
     Hector::IModelComponent* component_;
     if (component == "core") {
@@ -18,13 +18,17 @@ void OutputVisitor::add_variable(const std::string& component, const std::string
     } else {
         component_ = wrapper_->hcore()->getComponentByName(component);
     }
-    OutputVariable variable = {component_, name, std::vector<double>(static_cast<int>(wrapper_->hcore()->getEndDate() - start_date + 1)), need_date};
-    variables.emplace_back(variable);
+    if (in_spinup) {
+        variables.emplace_back(OutputVariable{component_, name, std::vector<double>(), need_date, in_spinup});
+    } else {
+        variables.emplace_back(
+            OutputVariable{component_, name, std::vector<double>(static_cast<int>(wrapper_->hcore()->getEndDate() - start_date + 1)), need_date, in_spinup});
+    }
 }
 
-const std::vector<double>& OutputVisitor::get_variable(const std::string& component, const std::string& name) const {
+const std::vector<double>& OutputVisitor::get_variable(const std::string& component, const std::string& name, const bool in_spinup) const {
     for (auto& variable : variables) {
-        if (name == variable.name && component == variable.component->getComponentName()) {
+        if (in_spinup == variable.in_spinup && name == variable.name && component == variable.component->getComponentName()) {
             return variable.values;
         }
     }
@@ -33,25 +37,42 @@ const std::vector<double>& OutputVisitor::get_variable(const std::string& compon
 
 bool OutputVisitor::shouldVisit(const bool in_spinup, const double date) {
     current_date = date;
-    return !in_spinup;
+    return true;
 }
 
 void OutputVisitor::visit(Hector::Core* core) {
-    unsigned int index = static_cast<int>(current_date - start_date - 1);
+    const unsigned int index = static_cast<int>(current_date - start_date - 1);
+    const bool in_spinup = core->inSpinup();
+    if (in_spinup) {
+        spinup_size_++;
+    }
     for (auto& variable : variables) {
-        Hector::message_data info;
-        if (variable.needs_date) {
-            info.date = current_date;
-        }
-        if (variable.component) {
-            variable.values[index] = variable.component->sendMessage(M_GETDATA, variable.name, info);
-        } else {
-            variable.values[index] = core->sendMessage(M_GETDATA, variable.name, info);
+        if (variable.in_spinup == in_spinup) {
+            Hector::message_data info;
+            if (variable.needs_date) {
+                info.date = current_date;
+            }
+            if (variable.component) {
+                if (in_spinup) {
+                    variable.values.push_back(variable.component->sendMessage(M_GETDATA, variable.name, info));
+                } else {
+                    variable.values[index] = variable.component->sendMessage(M_GETDATA, variable.name, info);
+                }
+            } else {
+                if (in_spinup) {
+                    variable.values.push_back(core->sendMessage(M_GETDATA, variable.name, info));
+                } else {
+                    variable.values[index] = core->sendMessage(M_GETDATA, variable.name, info);
+                }
+            }
         }
     }
 };
 
-int OutputVisitor::run_size() { return static_cast<int>(wrapper_->hcore()->getEndDate() - start_date); }
+int OutputVisitor::run_size() const { return static_cast<int>(wrapper_->hcore()->getEndDate() - start_date); }
+int OutputVisitor::spinup_size() const { return spinup_size_; }
+
+void OutputVisitor::reset() { variables.clear(); }
 
 HectorWrapper::HectorWrapper() : output_visitor(this) {
     Hector::Logger& glog = Hector::Logger::getGlobalLogger();
@@ -61,12 +82,12 @@ HectorWrapper::HectorWrapper() : output_visitor(this) {
     hcore_.addVisitor(&output_visitor);
 }
 
-HectorWrapper::~HectorWrapper(){};
-
 void HectorWrapper::run() {
     hcore_.prepareToRun();
     hcore_.run();
 }
+
+void HectorWrapper::reset() { output_visitor.reset(); }
 
 void HectorWrapper::set(const std::string& section, const std::string& variable, const std::string& value) {
     message_data data(value);
@@ -117,7 +138,8 @@ void HectorWrapper::set(const std::string& section, const std::string& variable,
     hcore_.setData(section, variable, data);
 }
 
-void HectorWrapper::set(const std::string& section, const std::string& variable, const int* years, const double* values, const size_t size, const std::string& unit) {
+void HectorWrapper::set(
+    const std::string& section, const std::string& variable, const int* years, const double* values, const size_t size, const std::string& unit) {
     for (unsigned int i = 0; i < size; ++i) {
         message_data data(unitval(values[i], unitval::parseUnitsName(unit)));
         data.date = years[i];
@@ -125,7 +147,8 @@ void HectorWrapper::set(const std::string& section, const std::string& variable,
     }
 }
 
-void HectorWrapper::set(const std::string& section, const std::string& variable, const std::vector<int>& years, const std::vector<double>& values, const std::string& unit) {
+void HectorWrapper::set(
+    const std::string& section, const std::string& variable, const std::vector<int>& years, const std::vector<double>& values, const std::string& unit) {
     if (years.size() != values.size()) {
         throw hector_wrapper_exception("years and values should be of equal size");
     }

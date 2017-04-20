@@ -28,22 +28,26 @@ class OutputVisitor : public AVisitor {
     double start_date;
     double current_date;
     double end_date;
+    int spinup_size_;
     const HectorWrapper* wrapper_;
     struct OutputVariable {
         IModelComponent* component;
         std::string name;
         std::vector<double> values;
         bool needs_date;
+        bool in_spinup;
     };
     std::vector<OutputVariable> variables;
 
   public:
     OutputVisitor(const HectorWrapper* wrapper_p) : wrapper_(wrapper_p) {};
-    void add_variable(const std::string& component, const std::string& name, const bool need_date = false);
-    const std::vector<double>& get_variable(const std::string& component, const std::string& name) const;
+    void add_variable(const std::string& component, const std::string& name, const bool need_date = false, const bool in_spinup = false);
+    const std::vector<double>& get_variable(const std::string& component, const std::string& name, const bool in_spinup = false) const;
     bool shouldVisit(const bool in_spinup, const double date);
     void visit(Core* core);
-    int run_size();
+    int run_size() const;
+    int spinup_size() const;
+    void reset();
 };
 
 class HectorWrapper {
@@ -53,13 +57,12 @@ class HectorWrapper {
 
   public:
     HectorWrapper();
-    virtual ~HectorWrapper();
-
     inline OutputVisitor* output() { return &output_visitor; }
     inline const OutputVisitor* output() const { return &output_visitor; }
     inline Core* hcore() { return &hcore_; }
     inline const Core* hcore() const { return &hcore_; }
-    virtual void run();
+    void reset();
+    void run();
     void set(const std::string& section, const std::string& variable, const std::string& value);
     void set(const std::string& section, const std::string& variable, const double value);
     void set(const std::string& section, const std::string& variable, const int year, const double value);
