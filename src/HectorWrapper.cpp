@@ -70,9 +70,12 @@ void OutputVisitor::visit(Hector::Core* core) {
 };
 
 int OutputVisitor::run_size() const { return static_cast<int>(wrapper_->hcore()->getEndDate() - start_date); }
+
 int OutputVisitor::spinup_size() const { return spinup_size_; }
 
 void OutputVisitor::reset() { variables.clear(); }
+
+void OutputVisitor::prepare_to_run() { spinup_size_ = 0; }
 
 HectorWrapper::HectorWrapper() : output_visitor(this) {
     Hector::Logger& glog = Hector::Logger::getGlobalLogger();
@@ -83,6 +86,7 @@ HectorWrapper::HectorWrapper() : output_visitor(this) {
 }
 
 void HectorWrapper::run() {
+    output_visitor.prepare_to_run();
     hcore_.prepareToRun();
     hcore_.run();
 }

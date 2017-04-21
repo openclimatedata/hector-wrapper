@@ -48,6 +48,7 @@ class OutputVisitor : public AVisitor {
     int run_size() const;
     int spinup_size() const;
     void reset();
+    void prepare_to_run();
 };
 
 class HectorWrapper {
@@ -59,7 +60,6 @@ class HectorWrapper {
     HectorWrapper();
     inline OutputVisitor* output() { return &output_visitor; }
     inline const OutputVisitor* output() const { return &output_visitor; }
-    inline Core* hcore() { return &hcore_; }
     inline const Core* hcore() const { return &hcore_; }
     void reset();
     void run();
