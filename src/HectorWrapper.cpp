@@ -11,7 +11,6 @@
 
 namespace Hector {
 void OutputVisitor::add_variable(const std::string& component, const std::string& name, const bool need_date, const bool in_spinup) {
-    start_date = wrapper_->hcore()->getStartDate();
     Hector::IModelComponent* component_;
     if (component == "core") {
         component_ = nullptr;
@@ -21,8 +20,9 @@ void OutputVisitor::add_variable(const std::string& component, const std::string
     if (in_spinup) {
         variables.emplace_back(OutputVariable{component_, name, std::vector<double>(), need_date, in_spinup});
     } else {
-        variables.emplace_back(
-            OutputVariable{component_, name, std::vector<double>(static_cast<int>(wrapper_->hcore()->getEndDate() - start_date + 1)), need_date, in_spinup});
+        variables.emplace_back(OutputVariable{component_, name,
+                                              std::vector<double>(static_cast<int>(wrapper_->hcore()->getEndDate() - wrapper_->hcore()->getStartDate() + 1)),
+                                              need_date, in_spinup});
     }
 }
 
@@ -41,7 +41,7 @@ bool OutputVisitor::shouldVisit(const bool in_spinup, const double date) {
 }
 
 void OutputVisitor::visit(Hector::Core* core) {
-    const unsigned int index = static_cast<int>(current_date - start_date - 1);
+    const unsigned int index = static_cast<int>(current_date - wrapper_->hcore()->getStartDate() - 1);
     const bool in_spinup = core->inSpinup();
     if (in_spinup) {
         spinup_size_++;
@@ -69,7 +69,7 @@ void OutputVisitor::visit(Hector::Core* core) {
     }
 };
 
-int OutputVisitor::run_size() const { return static_cast<int>(wrapper_->hcore()->getEndDate() - start_date); }
+int OutputVisitor::run_size() const { return static_cast<int>(wrapper_->hcore()->getEndDate() - wrapper_->hcore()->getStartDate()); }
 
 int OutputVisitor::spinup_size() const { return spinup_size_; }
 

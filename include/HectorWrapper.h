@@ -25,9 +25,7 @@ class hector_wrapper_exception : public std::runtime_error {
 
 class OutputVisitor : public AVisitor {
   private:
-    double start_date;
     double current_date;
-    double end_date;
     int spinup_size_;
     const HectorWrapper* wrapper_;
     struct OutputVariable {
