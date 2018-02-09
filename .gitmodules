@@ -1,4 +1,4 @@
 [submodule "hector"]
 	path = hector
-	url = https://github.com/openclimatedata/hector.git
+	url = https://github.com/JGCRI/hector.git
 	shallow = true
