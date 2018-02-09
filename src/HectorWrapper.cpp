@@ -80,7 +80,7 @@ void OutputVisitor::prepare_to_run() { spinup_size_ = 0; }
 HectorWrapper::HectorWrapper() : output_visitor(this) {
     Hector::Logger& glog = Hector::Logger::getGlobalLogger();
     glog.close();
-    glog.open("hector", false, Hector::Logger::LogLevel::WARNING, false);
+    glog.open("hector", false, false, Hector::Logger::LogLevel::WARNING);
     hcore_.init();
     hcore_.addVisitor(&output_visitor);
 }
